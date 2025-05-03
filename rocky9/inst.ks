@@ -1,47 +1,46 @@
-#version=RHEL8
-ignoredisk --only-use=sda
 # Partition clearing information
-clearpart --none --initlabel
+clearpart --all --initlabel
 # Use graphical install
 # graphical
 # Use CDROM installation media
 cdrom
 text
 # Keyboard layouts
-keyboard --vckeymap=us --xlayouts='us'
+keyboard de
 # System language
-lang en_US.UTF-8
+lang en_US
 
-# Network information
-network  --bootproto=dhcp --ipv6=auto --activate
-network  --hostname=localhost.localdomain
-repo --name="AppStream" --baseurl=file:///run/install/repo/AppStream
 # Root password
 rootpw Packer
 # Run the Setup Agent on first boot
-firstboot --disabled
+firstboot --disable
 # Do not configure the X Window System
 skipx
 # System services
 services --disabled="kdump" --enabled="sshd,rsyslog,chronyd"
 # System timezone
-timezone Etc/UTC --isUtc
+timezone Europe/Berlin --utc
 # Disk partitioning information
-part / --fstype="xfs" --grow --size=6144
-part swap --fstype="swap" --size=512
+part /boot/efi --fstype vfat --size 600 --ondisk=sda
+part / --fstype xfs --size 2048 --grow --ondisk=sda
 reboot
-
 
 %packages
 @^minimal-environment
-openssh-server
-openssh-clients
-sudo
+# Exclude unnecessary firmwares
+-iwl*firmware
+# add packages
 kexec-tools
-curl
+krb5-workstation
+bind-utils
+cloud-init
+cloud-utils-growpart
+git
+tmux
+zsh
 # allow for ansible
-python3
-python3-libselinux
+python3.11
+python3.11-pip
 
 # unnecessary firmware
 -aic94xx-firmware
@@ -78,18 +77,17 @@ python3-libselinux
 
 %post
 
-
 # this is installed by default but we don't need it in virt
 echo "Removing linux-firmware package."
-yum -C -y remove linux-firmware
+dnf -C -y remove linux-firmware
 
 # Remove firewalld; it is required to be present for install/image building.
 echo "Removing firewalld."
-yum -C -y remove firewalld --setopt="clean_requirements_on_remove=1"
+dnf -C -y remove firewalld --setopt="clean_requirements_on_remove=1"
 
 # remove avahi and networkmanager
 echo "Removing avahi/zeroconf and NetworkManager"
-yum -C -y remove avahi\* 
+dnf -C -y remove avahi\* 
 
 echo -n "Getty fixes"
 # although we want console output going to the serial console, we don't
@@ -122,28 +120,24 @@ echo "RUN_FIRSTBOOT=NO" > /etc/sysconfig/firstboot
 echo "Fixing SELinux contexts."
 touch /var/log/cron
 touch /var/log/boot.log
-mkdir -p /var/cache/yum
+mkdir -p /var/cache/dnf
 /usr/sbin/fixfiles -R -a restore
 
 # reorder console entries
 sed -i 's/console=tty0/console=tty0 console=ttyS0,115200n8/' /boot/grub2/grub.cfg
 
-#echo "Zeroing out empty space."
-# This forces the filesystem to reclaim space from deleted files
-# dd bs=1M if=/dev/zero of=/var/tmp/zeros || :
-# rm -f /var/tmp/zeros
-# echo "(Don't worry -- that out-of-space error was expected.)"
+dnf update -y
 
-yum update -y
+# add a datasource to cloud-init configuration
+# datasoure: nocloud
+# datasource_list: ['NoCloud', 'ConfigDrive', 'None']
+# sed -i "s/^# datasource:/datasource_list: \[\'NoCloud\', \'ConfigDrive\', \'None\'\]\\ndatasource: nocloud\\nunverified_modules: ['ssh-import-id','ca-certs']/" /etc/cloud/cloud.cfg
+echo "datasource_list: [ NoCloud, ConfigDrive ]" > /etc/cloud/cloud.cfg.d/99_pve.cfg
+# remove config_scripts_per_instance semaphore to allow a new run when template clone starts
+find /var/lib/cloud/instances -name "config_scripts_per_instance" -exec rm -f {} \;
 
 sed -i "s/^.*requiretty/#Defaults requiretty/" /etc/sudoers
 echo "PermitRootLogin yes" > /etc/ssh/sshd_config.d/allow-root-ssh.conf
 
-yum clean all
-%end
-
-%anaconda
-pwpolicy root --minlen=6 --minquality=1 --notstrict --nochanges --notempty
-pwpolicy user --minlen=6 --minquality=1 --notstrict --nochanges --emptyok
-pwpolicy luks --minlen=6 --minquality=1 --notstrict --nochanges --notempty
+dnf clean all
 %end
