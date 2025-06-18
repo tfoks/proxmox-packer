@@ -38,22 +38,10 @@ PROXMOX_PASSWORD=<scrubbed>
 
 The following commands will work:
 
-#### Rocky Linux 8
-
-```bash
-packer build -var-file variables.pkrvars.hcl rocky8/packer.pkr.hcl
-```
-
 #### Rocky Linux 9
 
 ```bash
 packer build -var-file variables.pkrvars.hcl rocky9/packer.pkr.hcl
-```
-
-#### Ubuntu 22.04
-
-```bash
-packer build -var-file variables.pkrvars.hcl ubuntu2204/packer.pkr.hcl
 ```
 
 #### Ubuntu 24.04
