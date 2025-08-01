@@ -39,8 +39,8 @@ git
 tmux
 zsh
 # allow for ansible
-python3.11
-python3.11-pip
+python3.12
+python3.12-pip
 
 # unnecessary firmware
 -aic94xx-firmware
