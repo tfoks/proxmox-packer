@@ -142,7 +142,19 @@ build {
   name = "proxmox-rl10"
 
   provisioner "shell" {
-    inline = ["dnf install -y qemu-guest-agent", "systemctl enable qemu-guest-agent", "shred -u /etc/ssh/*_key /etc/ssh/*_key.pub", "rm -f /var/run/utmp", ">/var/log/lastlog", ">/var/log/wtmp", ">/var/log/btmp", "rm -rf /tmp/* /var/tmp/*", "unset HISTFILE; rm -rf /home/*/.*history /root/.*history", "rm -f /root/*ks", "passwd -d root", "passwd -l root", "rm -f /etc/ssh/ssh_config.d/allow-root-ssh.conf"]
+    inline = [
+      "dnf install -y qemu-guest-agent",
+      "systemctl enable qemu-guest-agent",
+      "shred -u /etc/ssh/*_key /etc/ssh/*_key.pub",
+      "rm -f /var/run/utmp",
+      ">/var/log/lastlog",
+      ">/var/log/wtmp",
+      ">/var/log/btmp",
+      "rm -rf /tmp/* /var/tmp/*",
+      "unset HISTFILE; rm -rf /home/*/.*history /root/.*history",
+      "rm -f /root/*ks",
+      "rm -f /etc/ssh/ssh_config.d/allow-root-ssh.conf"
+    ]
   }
 
 }

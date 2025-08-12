@@ -144,7 +144,18 @@ build {
   name = "proxmox-debian12"
 
   provisioner "shell" {
-    inline = ["apt-get update -y", "systemctl enable qemu-guest-agent", "shred -u /etc/ssh/*_key /etc/ssh/*_key.pub", "rm -f /var/run/utmp", ">/var/log/lastlog", ">/var/log/wtmp", ">/var/log/btmp", "rm -rf /tmp/* /var/tmp/*", "unset HISTFILE; rm -rf /home/*/.*history /root/.*history", "rm -f /root/*ks", "passwd -d root", "passwd -l root", "rm -f /etc/ssh/ssh_config.d/allow-root-ssh.conf"]
+    inline = [
+      "apt-get update -y",
+      "systemctl enable qemu-guest-agent",
+      "shred -u /etc/ssh/*_key /etc/ssh/*_key.pub",
+      "rm -f /var/run/utmp",
+      ">/var/log/lastlog",
+      ">/var/log/wtmp",
+      ">/var/log/btmp",
+      "rm -rf /tmp/* /var/tmp/*",
+      "unset HISTFILE; rm -rf /home/*/.*history /root/.*history",
+      "rm -f /root/*ks"
+    ]
   }
 
 }
